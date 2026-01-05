@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">ProjectTemplate</string>
+    <string name="app_name">Ladder</string>
+    <string name="words">Words</string>
+    <string name="learn">Learn</string>
+    <string name="main">Main</string>
+    <string name="words_vocab_menu">Words vocab menu</string>
+    <string name="back">Back</string>
 </resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="Ladder.templates.android-library" target="21" />
+      <module name="Ladder.templates.feature.domain" target="11" />
+      <module name="Ladder.templates.feature.domain.main" target="11" />
+      <module name="Ladder.templates.feature.domain.test" target="11" />
+      <module name="Ladder.templates.feature.presentation" target="21" />
+      <module name="Ladder.templates.kotlin-library" target="11" />
+      <module name="Ladder.templates.kotlin-library.main" target="11" />
+      <module name="Ladder.templates.kotlin-library.test" target="11" />
+      <module name="ProjectTemplate.app" target="21" />
+      <module name="ProjectTemplate.buildSrc" target="21" />
+      <module name="ProjectTemplate.buildSrc.main" target="21" />
+      <module name="ProjectTemplate.buildSrc.test" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

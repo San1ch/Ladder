@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ $# -ne 3 ]; then
+  echo "Usage: ./create-v <template> <module_path> <package_name>"
+  echo "Example: ./create-v feature :features:init com.example.ladder.features.init"
+  exit 1
+fi
+
+TEMPLATE="$1"
+MODULE_PATH="$2"
+PACKAGE_NAME="$3"
+PROJECT_ROOT="$(pwd)"
+
+# :features:init -> features/init
+TARGET_DIR="${MODULE_PATH//:/\/}"
+TARGET_DIR="${TARGET_DIR#/}"
+
+if [ -d "$TARGET_DIR" ]; then
+  echo "Error: module already exists: $TARGET_DIR"
+  exit 1
+fi
+
+echo "Creating module:"
+echo "  Template: $TEMPLATE"
+echo "  Path:     $TARGET_DIR"
+echo "  Package:  $PACKAGE_NAME"
+
+mkdir -p "$(dirname "$TARGET_DIR")"
+cp -r "templates/$TEMPLATE" "$TARGET_DIR"
+
+# com.example.foo -> com/example/foo
+PACKAGE_PATH="$(echo "$PACKAGE_NAME" | tr '.' '/')"
+
+# Expand __package__ directories into real package chain
+find "$TARGET_DIR" -type d -name "__package__" | while read -r pkg_dir; do
+  parent_dir="$(dirname "$pkg_dir")"
+  target_pkg_dir="$parent_dir/$PACKAGE_PATH"
+
+  mkdir -p "$target_pkg_dir"
+
+  find "$pkg_dir" -mindepth 1 -maxdepth 1 -print0 | while IFS= read -r -d $'\0' item; do
+    mv "$item" "$target_pkg_dir/"
+  done
+
+  rm -rf "$pkg_dir"
+done
+
+# Replace __package__ in files
+find "$TARGET_DIR" -type f \( -name "*.kt" -o -name "*.kts" -o -name "*.xml" -o -name "*.gradle*" \) -print0 |
+while IFS= read -r -d $'\0' file; do
+  sed -i "s/__package__/$PACKAGE_NAME/g" "$file"
+done
+
+# Replace projects.__module_path__ -> projects.features.init
+MODULE_ACCESSOR="$(echo "$MODULE_PATH" | sed 's/^://; s/:/./g')"
+
+find "$TARGET_DIR" -type f \( -name "*.kt" -o -name "*.kts" \) -print0 |
+while IFS= read -r -d $'\0' file; do
+  sed -i "s/projects.__module_path__/projects.$MODULE_ACCESSOR/g" "$file"
+done
+
+# Add includes to settings.gradle.kts
+SETTINGS_FILE="$PROJECT_ROOT/settings.gradle.kts"
+
+if [[ "$TEMPLATE" == "feature" || "$TEMPLATE" == "features" ]]; then
+  for sub in domain presentation; do
+    include_line="include(\"$MODULE_PATH:$sub\")"
+    if ! grep -q "$include_line" "$SETTINGS_FILE"; then
+      echo "$include_line" >> "$SETTINGS_FILE"
+    fi
+  done
+else
+  include_line="include(\"$MODULE_PATH\")"
+  if ! grep -q "$include_line" "$SETTINGS_FILE"; then
+    echo "$include_line" >> "$SETTINGS_FILE"
+  fi
+fi
+
+echo "Done."
